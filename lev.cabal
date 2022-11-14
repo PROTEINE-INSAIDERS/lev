@@ -1,0 +1,148 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.34.4.
+--
+-- see: https://github.com/sol/hpack
+
+name:           lev
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/PROTEINE-INSAIDERS/lev#readme>
+category:       Serialization
+homepage:       https://github.com/PROTEINE-INSAIDERS/lev#readme
+bug-reports:    https://github.com/PROTEINE-INSAIDERS/lev/issues
+author:         Stanislav Chernichkin
+maintainer:     schernichkin@gmail.com
+copyright:      2022 Stanislav Chernichkin
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    CHANGELOG.md
+
+source-repository head
+  type: git
+  location: https://github.com/PROTEINE-INSAIDERS/lev
+
+library
+  exposed-modules:
+      Lev
+      Lev.Bench
+      Lev.Fixed
+      Lev.Internal.Fixed.ByteString
+      Lev.Internal.Fixed.Core
+      Lev.Internal.Fixed.Test
+      Lev.Internal.Fixed.TH
+      Lev.Internal.IxMW
+      Lev.Internal.Recon
+      Lev.Variable
+  other-modules:
+      Paths_lev
+  hs-source-dirs:
+      src
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+  build-depends:
+      base >=4.7 && <5
+    , bytestring
+    , containers
+    , criterion
+    , deepseq
+    , flat
+    , ghc-prim
+    , indexed
+    , mtl
+    , primitive
+    , store
+    , tagged
+    , template-haskell
+    , th-orphans
+    , th-utilities
+    , unliftio
+    , vector
+  default-language: Haskell2010
+
+executable lev-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_lev
+  hs-source-dirs:
+      app
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , bytestring
+    , containers
+    , criterion
+    , deepseq
+    , flat
+    , ghc-prim
+    , indexed
+    , lev
+    , mtl
+    , primitive
+    , store
+    , tagged
+    , template-haskell
+    , th-orphans
+    , th-utilities
+    , unliftio
+    , vector
+  default-language: Haskell2010
+
+test-suite lev-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_lev
+  hs-source-dirs:
+      test
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , bytestring
+    , containers
+    , criterion
+    , deepseq
+    , flat
+    , ghc-prim
+    , indexed
+    , lev
+    , mtl
+    , primitive
+    , store
+    , tagged
+    , template-haskell
+    , th-orphans
+    , th-utilities
+    , unliftio
+    , vector
+  default-language: Haskell2010
+
+benchmark lev-bench
+  type: exitcode-stdio-1.0
+  main-is: Bench.hs
+  other-modules:
+      Paths_lev
+  hs-source-dirs:
+      bench
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N1 -with-rtsopts=-s -with-rtsopts=-qg
+  build-depends:
+      base >=4.7 && <5
+    , bytestring
+    , containers
+    , criterion
+    , deepseq
+    , flat
+    , ghc-prim
+    , indexed
+    , lev
+    , mtl
+    , primitive
+    , store
+    , tagged
+    , template-haskell
+    , th-orphans
+    , th-utilities
+    , unliftio
+    , vector
+  default-language: Haskell2010
