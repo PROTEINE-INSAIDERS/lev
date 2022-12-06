@@ -20,6 +20,7 @@
 
 module Lev.Internal.Core where
 
+import Data.Data (TypeRep)
 import Data.Functor.Contravariant (Contravariant (contramap))
 import Data.Kind (Type)
 import Data.Proxy (Proxy (Proxy))
@@ -27,31 +28,21 @@ import Data.Word (Word8)
 import GHC.Generics (C1, Generic (Rep, from), K1 (K1, unK1), M1 (M1, unM1), U1, type (:*:) ((:*:)), type (:+:) (L1, R1))
 import GHC.TypeLits (CmpNat, ErrorMessage (Text), KnownNat, Nat, TypeError, natVal, type (+), type (<=?))
 import GHC.Types (Constraint)
-import Data.Data (TypeRep)
 
-data Layout = Fixed | Variable
+data Fixed
 
-data SLayout (l :: Layout) where
-  SFixed :: SLayout 'Fixed
-  SVariable :: SLayout 'Variable
+data Variable
 
-class LayoutI l where
-  layout :: SLayout l
+class IsFixedSized l where
+  isFixedSized :: Bool
 
-instance LayoutI 'Fixed where
-  {-# INLINE layout #-}
-  layout = SFixed
+instance IsFixedSized Fixed where
+  {-# INLINE isFixedSized #-}
+  isFixedSized = True
 
-instance LayoutI 'Variable where
-  {-# INLINE layout #-}
-  layout = SVariable
-
--- TODO: рассмотреть возможность отказа от семейства типов и использования полиморфных видов для layout
--- Возможно на уровне класса Lev имеет смысл определить size :: a -> Int, а на уровне Generic классов
--- использовать семейства типов со значением Unit для фиксированного размера.
-type family Size (l :: Layout) a where
-  Size 'Fixed _ = ()
-  Size 'Variable a = a -> Int
+instance IsFixedSized Variable where
+  {-# INLINE isFixedSized #-}
+  isFixedSized = False
 
 class Lev l a | a -> l where
   type SizeOf l a :: Nat
@@ -64,14 +55,14 @@ class GLev l f where
   type GSizeOf l f :: Nat
   gSize :: f a -> Int
 
-instance KnownNat (GSizeOf 'Fixed f) => GLev 'Fixed f where
-  type GSizeOf 'Fixed f = GFixedSizeOf f
+instance KnownNat (GSizeOf Fixed f) => GLev Fixed f where
+  type GSizeOf Fixed f = GFixedSizeOf f
   gSize = const $ fromIntegral $ natVal $ Proxy @(GFixedSizeOf f)
 
 type family GFixedSizeOf f where
   GFixedSizeOf (M1 _ _ f) = GFixedSizeOf f
   GFixedSizeOf U1 = 0
-  GFixedSizeOf (K1 _ a) = SizeOf 'Fixed a
+  GFixedSizeOf (K1 _ a) = SizeOf Fixed a
   GFixedSizeOf (f :*: g) = GFixedSizeOf f + GFixedSizeOf g
   GFixedSizeOf (f :+: g) = SizeOfTagResult (SumArity (f :+: g) <=? 256) + GFixedSumSizeOf (f :+: g)
 
@@ -82,7 +73,7 @@ type family SumArity a where
 type MoreThan256ConstructorsMessage = 'Text "Generic deriving of Lev instances can only be used on datatypes with fewer than 256 constructors."
 
 type family SizeOfTagResult b where
-  SizeOfTagResult 'True = SizeOf 'Fixed Word8
+  SizeOfTagResult 'True = SizeOf Fixed Word8
   SizeOfTagResult 'False = TypeError MoreThan256ConstructorsMessage
 
 type family OrdCond o lt eq gt where
@@ -94,10 +85,10 @@ type Max (m :: Nat) (n :: Nat) = OrdCond (CmpNat m n) n n m :: Nat
 
 type family GFixedSumSizeOf f where
   GFixedSumSizeOf (f :+: g) = Max (GFixedSumSizeOf f) (GFixedSumSizeOf g)
-  GFixedSumSizeOf (M1 ti c f) = GSizeOf 'Fixed f
+  GFixedSumSizeOf (M1 ti c f) = GSizeOf Fixed f
 
-instance (GVariableSize f) => GLev 'Variable f where
-  type GSizeOf 'Variable f = TypeError ('Text "GSizeOf: Variable.")
+instance (GVariableSize f) => GLev Variable f where
+  type GSizeOf Variable f = TypeError ('Text "GSizeOf: Variable.")
   gSize = gVariableSize
 
 class GVariableSize f where
@@ -136,36 +127,31 @@ instance (GVariableSumSize f, GVariableSumSize g) => GVariableSumSize (f :+: g) 
 
 #include "MachDeps.h"
 
-instance Lev 'Fixed Int where
-  type
-    SizeOf 'Fixed Int =
-      SIZEOF_HSINT
+instance Lev Fixed Int where
+  type SizeOf Fixed Int = SIZEOF_HSINT
   {-# INLINE size #-}
-  size = const $ fromIntegral $ natVal $ Proxy @(SizeOf 'Fixed Int)
+  size = const $ fromIntegral $ natVal $ Proxy @(SizeOf Fixed Int)
 
-instance Lev 'Fixed Word8 where
-  type
-    SizeOf 'Fixed Word8 =
-      SIZEOF_WORD8
+instance Lev Fixed Word8 where
+  type SizeOf Fixed Word8 = SIZEOF_WORD8
   {-# INLINE size #-}
-  size = const $ fromIntegral $ natVal $ Proxy @(SizeOf 'Fixed Word8)
+  size = const $ fromIntegral $ natVal $ Proxy @(SizeOf Fixed Word8)
 
-instance (LayoutI la, Lev la a) => Lev 'Variable [a] where
-  type
-    SizeOf 'Variable [a] =
-      TypeError ('Text "SizeOf [a]: Variable")
+instance (IsFixedSized la, Lev la a) => Lev Variable [a] where
+  type SizeOf Variable [a] = TypeError ('Text "SizeOf [a]: Variable")
   {-# INLINE size #-}
-  size xs = case layout @la of
-    SFixed -> length xs * size @la @a (undefined :: a)
-    SVariable -> sum $ size @la @a <$> xs
+  size xs =
+    if isFixedSized @la
+      then length xs * size @la @a (undefined :: a)
+      else sum $ size @la @a <$> xs
 
-data Test = Test0 Int | Test1 | Test2 deriving (Show, Eq, Generic, Lev 'Fixed)
+data Test = Test0 Int | Test1 | Test2 deriving (Show, Eq, Generic, Lev Fixed)
 
 test0 = size $ Test0 0
 
-data TestFixedData = TestFixedData1 Int | TestFixedData2 Int Int deriving (Show, Eq, Generic, Lev 'Fixed)
+data TestFixedData = TestFixedData1 Int | TestFixedData2 Int Int deriving (Show, Eq, Generic, Lev Fixed)
 
-data TestVariableData = TestVariableData0 | TestVariableData1 Int TestFixedData  deriving (Show, Eq, Generic, Lev 'Variable)
+data TestVariableData = TestVariableData0 | TestVariableData1 Int TestFixedData deriving (Show, Eq, Generic, Lev Variable)
 
 testData1 = TestVariableData1 10 $ TestFixedData1 20
 
@@ -180,6 +166,3 @@ testData3 = [testData2, testData2]
 test3 = size testData3
 
 test4 = size (TestVariableData0)
-
-
-
