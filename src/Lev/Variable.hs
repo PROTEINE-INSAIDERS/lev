@@ -25,13 +25,60 @@ module Lev.Variable where
 import Data.Word (Word8)
 import Data.Data (Proxy (Proxy))
 
-import GHC.Generics (Generic (Rep), M1, D, C, S, type (:*:), K1, U1, type (:+:))
+import GHC.Generics (Generic (Rep, from), M1 (M1), D, C, S, type (:*:) ((:*:)), K1 (K1), U1, type (:+:))
 import GHC.TypeLits (Nat, type (+), natVal, KnownNat)
 import Data.Kind (Type)
 import Lev.Internal.Fixed.Core (Max)
-import Data.Tagged (Tagged (..))
 import qualified Flat as Lev
+-- import Data.Fixed (Fixed)
 
+-- | Parser type tags.
+-- Using kind 'Type' instead of lifted sum type to allow custom tags. 
+data Fixed
+data Variable  
+
+class Lev (a :: Type) where
+  size :: a -> Int
+
+instance {-# OVERLAPPABLE #-} (LevImpl l a) => Lev a where 
+  size = sizeImpl (Proxy @l)
+
+-- идеи:
+-- - сериализация мутаблельных структур - это возможно, для этого потребуется, чтобы size запускался в монаде. Это не выглядит чем-то сложным.
+-- - для фиксированных типов не требуется значения a, следует ли создать тип данных size как в Store? 
+
+class LevImpl l a | a -> l where
+  sizeImpl :: p l -> a -> Int
+  default sizeImpl :: (Generic a, GSize l (Rep a)) => p l -> a -> Int 
+  sizeImpl p = gsize p . from
+
+instance LevImpl Fixed Word8 where
+  sizeImpl _ _ = 1
+
+class GSize l f where
+  gsize :: p l -> f a -> Int
+
+instance (GSize Variable f) => GSize Variable (M1 ti c f) where
+  gsize p (M1 x) = gsize p x
+
+instance GSize Variable U1 where
+  gsize _ = const 0
+
+instance (LevImpl l a) => GSize Variable (K1 i a) where
+  gsize _ (K1 a) = size a
+
+instance (GSize Variable f, GSize Variable g) => GSize Variable (f :*: g) where
+  gsize p (x :*: y) = gsize p x + gsize p y
+
+instance LevImpl Fixed a => LevImpl Variable [a] where 
+  sizeImpl _ b = size (undefined :: a) * length b
+
+
+data TestData = TestData Word8 [Word8] deriving (Generic, LevImpl Variable)
+
+-- test = size (TestData 3 [1, 2 ,3])
+
+{-
 class (KnownNat (FixedSize (a :: Type))) => Fixed a where -- сможем ли мы этим воспользоваться, оставив это только в контексте класса? 
   type FixedSize a :: Nat  
   type FixedSize a = GFixedSize (Rep a)
@@ -82,4 +129,5 @@ type family GFixedSize (f :: Type -> Type) :: Nat where
 Эксперементальный вариант:
 Используется единственный класс Lev f a где f - флаг, указывающий на тип сериализатора. При вызове из generic сериализатора используется 
 переключатель с двумя экземплярами.
+-}
 -}

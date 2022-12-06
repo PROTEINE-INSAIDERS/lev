@@ -22,7 +22,7 @@ import GHC.TypeLits (KnownNat)
 import GHC.TypeNats (type (+))
 import GHC.Types (Int (I#))
 import Language.Haskell.TH (Body (NormalB), Con (NormalC), Cxt, Dec (DataD, InstanceD, TySynInstD), Exp (AppE, CaseE, ConE, LamE, UInfixE, VarE), Info (ClassI, TyConI), Match (Match), Name, Pat (ConP, VarP), Q, TyLit (NumTyLit), TySynEqn (TySynEqn), TyVarBndr (KindedTV, PlainTV), Type (AppT, ConT, InfixT, LitT, TupleT, UInfixT, VarT), listE, litT, mkName, newName, normalB, numTyLit, pprint, reify, sigD, tupleT, valD, varP, varT)
-import Language.Haskell.TH.Instances ()
+-- import Language.Haskell.TH.Instances ()
 import Language.Haskell.TH.Syntax (Quote)
 import Lev.Internal.Fixed.Core
 import TH.ReifySimple

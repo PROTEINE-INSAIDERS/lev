@@ -27,11 +27,12 @@ dependencies:
 - indexed
 - mtl
 - primitive
+- singletons 
+- singletons-th
 - template-haskell
-- th-orphans
+# - th-orphans
 - th-utilities
 - unliftio
-- tagged # tmp
 
 # TODO: move benchmarks to bench/ directory and remove this dependencies
 - criterion

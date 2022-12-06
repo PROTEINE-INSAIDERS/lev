@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.4.
+-- This file has been generated from package.yaml by hpack version 0.35.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -29,12 +29,15 @@ library
       Lev
       Lev.Bench
       Lev.Fixed
+      Lev.Internal.Core
       Lev.Internal.Fixed.ByteString
       Lev.Internal.Fixed.Core
       Lev.Internal.Fixed.Test
       Lev.Internal.Fixed.TH
       Lev.Internal.IxMW
       Lev.Internal.Recon
+      Lev.Internal.Test
+      Lev.Overlapping
       Lev.Variable
   other-modules:
       Paths_lev
@@ -52,10 +55,10 @@ library
     , indexed
     , mtl
     , primitive
+    , singletons
+    , singletons-th
     , store
-    , tagged
     , template-haskell
-    , th-orphans
     , th-utilities
     , unliftio
     , vector
@@ -80,10 +83,10 @@ executable lev-exe
     , lev
     , mtl
     , primitive
+    , singletons
+    , singletons-th
     , store
-    , tagged
     , template-haskell
-    , th-orphans
     , th-utilities
     , unliftio
     , vector
@@ -109,10 +112,10 @@ test-suite lev-test
     , lev
     , mtl
     , primitive
+    , singletons
+    , singletons-th
     , store
-    , tagged
     , template-haskell
-    , th-orphans
     , th-utilities
     , unliftio
     , vector
@@ -138,10 +141,10 @@ benchmark lev-bench
     , lev
     , mtl
     , primitive
+    , singletons
+    , singletons-th
     , store
-    , tagged
     , template-haskell
-    , th-orphans
     , th-utilities
     , unliftio
     , vector

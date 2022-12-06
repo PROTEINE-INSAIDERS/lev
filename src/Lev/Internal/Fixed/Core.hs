@@ -218,8 +218,8 @@ instance (GPeekSum m o n f, GPeekSum m o (n + SumArity f) g, KnownNat (n + SumAr
       )
 
   {-# INLINE gPeekSum #-}
-  gPeekSum tag proxyL
-    | tag < sizeL = gPeekSum tag proxyL >>>= \x -> peekSkip Proxy *>> ireturn (L1 x)
+  gPeekSum tag proxyL -- peekSkip используется чтобы пропустить остаток данных, если размер знечения меньше максимального размера.  
+    | tag < sizeL = gPeekSum tag proxyL >>>= \x -> peekSkip Proxy *>> ireturn (L1 x) 
     | otherwise = gPeekSum @m @o @(n + SumArity f) @g tag (Proxy @(n + SumArity f)) >>>= \x -> peekSkip Proxy *>> ireturn (R1 x)
     where
       sizeL = fromInteger (natVal (Proxy :: Proxy (n + SumArity f)))

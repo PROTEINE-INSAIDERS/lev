@@ -69,12 +69,12 @@ benchEncode' msg x0 =
     let label = msg ++ " (" ++ show (typeOf x0) ++ ")"
         benchStore name = bench name (nf Store.encode x)
         benchLev name = bench name (nfIO $ Lev.encode x)
-        -- benchFlat name = bench name (nf Flat.flat x)
+        benchFlat name = bench name (nf Flat.flat x)
      in bgroup
           label
           [ benchLev "lev",
-            benchStore "store" --,
-            -- benchFlat "flat"
+            benchStore "store",
+            benchFlat "flat"
           ]
 
 benchDecode :: Ctx a => a -> Benchmark
@@ -85,13 +85,13 @@ benchDecode' prefix x0 =
   bgroup
     label
     [ env (Lev.encode x0) $ \x -> bench "lev" (nfIO (Lev.decode x :: IO a)),
-      env (return (Store.encode x0)) $ \x -> bench "store" (nf (Store.decodeEx :: BS.ByteString -> a) x) --,
-      -- env (return (Flat.flat x0)) $ \x -> bench "flat" (nf (ensureRight . Flat.unflat :: BS.ByteString -> Either String a) x)
+      env (return (Store.encode x0)) $ \x -> bench "store" (nf (Store.decodeEx :: BS.ByteString -> a) x),
+      env (return (Flat.flat x0)) $ \x -> bench "flat" (nf (ensureRight . Flat.unflat :: BS.ByteString -> a) x)
     ]
   where
     label = prefix ++ " (" ++ show (typeOf x0) ++ ")"
-    -- ensureRight (Left e) = error $ "left!: " ++ show e
-    -- ensureRight (Right x) = x
+    ensureRight (Left e) = error $ "left!: " ++ show e
+    ensureRight (Right x) = x
 
 mainBench :: IO ()
 mainBench =
@@ -108,7 +108,7 @@ mainBench =
               benchEncode smallprodsG,
               benchEncode smallprodsTH,
               benchEncode (head sss)
-            ],
+            ], 
           bgroup
             "decode"
             [ benchDecode is,

@@ -11,4 +11,8 @@ import Lev.Internal.Fixed.Core
 import Lev.Internal.Fixed.ByteString
 import Lev.Internal.Fixed.TH
 
+import Foreign.C.Types
+import Control.Monad.Primitive
+import GHC.TypeNats
+
 mkPrimitiveSerializeInsances
