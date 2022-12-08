@@ -29,20 +29,26 @@ import GHC.Generics (C1, Generic (Rep, from), K1 (K1, unK1), M1 (M1, unM1), U1, 
 import GHC.TypeLits (CmpNat, ErrorMessage (Text), KnownNat, Nat, TypeError, natVal, type (+), type (<=?))
 import GHC.Types (Constraint)
 
+
 data Fixed
 
 data Variable
 
-class IsFixedSized l where
-  isFixedSized :: Bool
+data Size (fixed :: Bool) a where 
+  FixedSize :: Int -> Size 'True a 
+  VariableSize ::  (a -> Int) -> Size 'False a 
 
-instance IsFixedSized Fixed where
-  {-# INLINE isFixedSized #-}
-  isFixedSized = True
+class Sized l a where
+  type IsFixed l :: Bool
+  sized :: Size (IsFixed l) a
 
-instance IsFixedSized Variable where
-  {-# INLINE isFixedSized #-}
-  isFixedSized = False
+instance (Lev Fixed a) => Sized Fixed a where
+  type IsFixed Fixed = 'True
+  sized = FixedSize $ size (undefined :: a)
+
+instance (Lev Variable a) => Sized Variable a where
+  type IsFixed Variable = 'False
+  sized = VariableSize $ size @Variable @a
 
 class Lev l a | a -> l where
   type SizeOf l a :: Nat
@@ -137,13 +143,12 @@ instance Lev Fixed Word8 where
   {-# INLINE size #-}
   size = const $ fromIntegral $ natVal $ Proxy @(SizeOf Fixed Word8)
 
-instance (IsFixedSized la, Lev la a) => Lev Variable [a] where
+instance (Sized l a, Lev l a) => Lev Variable [a] where
   type SizeOf Variable [a] = TypeError ('Text "SizeOf [a]: Variable")
   {-# INLINE size #-}
-  size xs =
-    if isFixedSized @la
-      then length xs * size @la @a (undefined :: a)
-      else sum $ size @la @a <$> xs
+  size xs = case sized @l @a of
+    FixedSize sz -> length xs * sz
+    VariableSize f -> sum $ f <$> xs
 
 data Test = Test0 Int | Test1 | Test2 deriving (Show, Eq, Generic, Lev Fixed)
 
