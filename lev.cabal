@@ -5,7 +5,7 @@ cabal-version: 1.12
 -- see: https://github.com/sol/hpack
 
 name:           lev
-version:        0.1.0.0
+version:        0.0.0.1
 description:    Please see the README on GitHub at <https://github.com/PROTEINE-INSAIDERS/lev#readme>
 category:       Serialization
 homepage:       https://github.com/PROTEINE-INSAIDERS/lev#readme

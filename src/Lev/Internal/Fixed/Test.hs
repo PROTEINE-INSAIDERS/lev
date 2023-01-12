@@ -15,20 +15,9 @@
 
 module Lev.Internal.Fixed.Test where
 
-import Control.Monad.Primitive (PrimMonad)
-import Data.Functor.Indexed (IxApplicative, (*>>), IxPointed (ireturn), (<<$>>), (<<*>>))
-import Data.Word (Word8, Word16, Word32)
 import GHC.Generics (Generic)
-import GHC.TypeLits (KnownNat, type (+))
-import Language.Haskell.TH (runQ, instanceD, Type)
-import Language.Haskell.TH.Lib (stringE)
-import Language.Haskell.TH.Syntax (reify)
 import Lev.Fixed
-import Data.ByteString (ByteString)
-import Data.ByteString.Builder (Builder, byteStringHex, toLazyByteString)
-import qualified Data.ByteString.Lazy as LBS
-import Data.Int
-import Data.Data (Typeable, Proxy (Proxy))
+import Data.Data (Typeable)
 
 data Test0 a = Test0 Double Int Word8 deriving (Show, Generic)
 

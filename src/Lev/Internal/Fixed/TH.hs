@@ -151,7 +151,7 @@ serializeInstanceD aName = do
           )
           (zip [0 ..] fieldTypes)
 
-      let pokeP = ConP cName $ map (VarP . fst) fields
+      let pokeP = ConP cName [] $ map (VarP . fst) fields
       let pokeB = NormalB $ case fields of
             [] -> AppE (VarE 'ireturn) (ConE '())
             -- [] -> AppE (VarE 'ireturn) (ConE '())
