@@ -11,8 +11,7 @@ import Lev.Internal.Fixed.Core
 import Lev.Internal.Fixed.ByteString
 import Lev.Internal.Fixed.TH
 
-import Foreign.C.Types
-import Control.Monad.Primitive
-import GHC.TypeNats
-
 mkPrimitiveSerializeInsances
+
+-- instance Serialize m n Word8 where
+--    type SerializeConstraint m o CBool = (PrimMonad m, KnownNat o)

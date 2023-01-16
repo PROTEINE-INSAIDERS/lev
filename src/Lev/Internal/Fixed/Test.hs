@@ -18,6 +18,7 @@ module Lev.Internal.Fixed.Test where
 import GHC.Generics (Generic)
 import Lev.Fixed
 import Data.Data (Typeable)
+import Data.Word
 
 data Test0 a = Test0 Double Int Word8 deriving (Show, Generic)
 

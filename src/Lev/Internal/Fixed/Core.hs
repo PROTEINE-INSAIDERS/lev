@@ -1,16 +1,6 @@
-{-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DefaultSignatures #-}
-{-# LANGUAGE DerivingStrategies #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE PolyKinds #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Lev.Internal.Fixed.Core where
@@ -19,7 +9,6 @@ import Control.Monad.Indexed (IxFunctor, IxMonad, IxPointed, ireturn, (>>>=))
 import Control.Monad.Primitive (PrimMonad)
 import Data.Data (Proxy (Proxy))
 import Data.Functor.Indexed (IxApplicative, (*>>), (<<$>>), (<<*>>))
-import Data.Kind (Constraint)
 import Data.Primitive (Prim)
 import Data.Primitive.Ptr (readOffPtr, writeOffPtr)
 import Data.Word (Word8)
@@ -29,6 +18,7 @@ import GHC.TypeLits (CmpNat, ErrorMessage (Text), Nat, TypeError, natVal, type (
 import GHC.TypeNats (KnownNat)
 import Lev.Internal.IxMW
 import Lev.Internal.Recon
+import Data.Kind (Constraint, Type)
 
 newtype Peek m (i :: Nat) (j :: Nat) a = Peek {unPeek :: IxMW (ReconT (Ptr Word8) m) i j a}
   deriving
@@ -84,7 +74,7 @@ pokeSkip _ = Poke $ IxMW $ return ()
 -- также следует переименовать Constraint в Context.
 -- Возможно следует разбить класс на подклассы: FixedSize, FixedPeek, FixedPoke.
 -- На верхнем уровне возможно такое разбиение не имеет смысла, но на уровне генериков контексты Peek и Poke отличаются для типов-сумм.
-class Serialize m o a where
+class Serialize (m :: Type -> Type) o a where
   type SizeOf a :: Nat
   type SizeOf a = GSizeOf (Rep a)
 

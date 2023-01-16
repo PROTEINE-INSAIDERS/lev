@@ -30,6 +30,7 @@ import TH.ReifySimple
     reifyDataType,
   )
 import TH.Utilities (appsT)
+import qualified Data.Kind as Kind
 
 -- | Primitive types sizes (used to enerate Serialize instances for them)
 $( do

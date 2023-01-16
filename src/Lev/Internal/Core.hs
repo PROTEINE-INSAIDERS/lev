@@ -29,6 +29,8 @@ import GHC.Generics (C1, Generic (Rep, from), K1 (K1, unK1), M1 (M1, unM1), U1, 
 import GHC.TypeLits (CmpNat, ErrorMessage (Text), KnownNat, Nat, TypeError, natVal, type (+), type (<=?))
 import GHC.Types (Constraint)
 
+
+
 data Fixed
 
 data Variable
