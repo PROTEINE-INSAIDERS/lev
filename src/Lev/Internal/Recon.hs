@@ -6,7 +6,6 @@
 module Lev.Internal.Recon
   ( ReconT (..),
     evalReconT,
-    mapReconT,
     module Control.Monad,
     module Control.Monad.Reader,
     module Control.Monad.Trans,
@@ -18,7 +17,7 @@ import Control.Monad.Reader
 import Control.Monad.Trans
 
 -- | Reader + continuation (codensity?) monad transformer
-newtype ReconT e m a = ReconT {runReconT :: forall r. e -> (a -> m r) -> m r} --TODO: add failure via Either?
+newtype ReconT e m a = ReconT {runReconT :: forall r . e -> (a -> m r) -> m r}
 
 {-# INLINE pureReconT #-}
 pureReconT :: a -> ReconT e m a
@@ -31,10 +30,6 @@ bindReconT (ReconT f) g = ReconT $ \e k -> f e (\a -> runReconT (g a) e k)
 {-# INLINE evalReconT #-}
 evalReconT :: (Monad m) => ReconT e m a -> e -> m a
 evalReconT m e = runReconT m e return
-
-{-# INLINE mapReconT #-}
-mapReconT :: (Monad m, Monad n) => (m a -> n b) -> ReconT e m a -> ReconT e n b
-mapReconT f m = ReconT $ \e k -> f (evalReconT m e) >>= k
 
 instance Functor (ReconT e m) where
   {-# INLINE fmap #-}

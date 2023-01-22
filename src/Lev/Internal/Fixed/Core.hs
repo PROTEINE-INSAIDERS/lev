@@ -1,14 +1,24 @@
+{-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DefaultSignatures #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE PolyKinds #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Lev.Internal.Fixed.Core where
 
-import Control.Monad.Indexed (IxFunctor, IxMonad, IxPointed, ireturn, (>>>=))
+import Control.Monad.Indexed (IxApplicative (iap), IxFunctor, IxMonad (ibind), IxPointed, ireturn, (>>>=))
 import Control.Monad.Primitive (PrimMonad)
 import Data.Data (Proxy (Proxy))
-import Data.Functor.Indexed (IxApplicative, (*>>), (<<$>>), (<<*>>))
+import Data.Functor.Indexed (IxApplicative, IxFunctor (imap), (*>>), (<<$>>), (<<*>>))
+import Data.Kind (Constraint, Type)
 import Data.Primitive (Prim)
 import Data.Primitive.Ptr (readOffPtr, writeOffPtr)
 import Data.Word (Word8)
@@ -18,9 +28,8 @@ import GHC.TypeLits (CmpNat, ErrorMessage (Text), Nat, TypeError, natVal, type (
 import GHC.TypeNats (KnownNat)
 import Lev.Internal.IxMW
 import Lev.Internal.Recon
-import Data.Kind (Constraint, Type)
 
-newtype Peek m (i :: Nat) (j :: Nat) a = Peek {unPeek :: IxMW (ReconT (Ptr Word8) m) i j a}
+newtype Peek (m :: Type -> Type) (i :: Nat) (j :: Nat) a = Peek {unPeek :: IxMW (ReconT (Ptr Word8) m) i j a}
   deriving
     ( IxFunctor,
       IxPointed,
@@ -196,7 +205,6 @@ class GPeekSum m o n f where
   type GPeekSumConstraint m o f :: Constraint
   gPeekSum :: (GPeekSumConstraint m o f) => Word8 -> Proxy n -> Peek m o (o + GPeekSumSizeOf f) (f a)
 
-
 instance (GPeekSum m o n f, GPeekSum m o (n + SumArity f) g, KnownNat (n + SumArity f)) => GPeekSum m o n (f :+: g) where
   type GPeekSumSizeOf (f :+: g) = Max (GPeekSumSizeOf f) (GPeekSumSizeOf g)
   type
@@ -208,8 +216,8 @@ instance (GPeekSum m o n f, GPeekSum m o (n + SumArity f) g, KnownNat (n + SumAr
       )
 
   {-# INLINE gPeekSum #-}
-  gPeekSum tag proxyL -- peekSkip используется чтобы пропустить остаток данных, если размер знечения меньше максимального размера.  
-    | tag < sizeL = gPeekSum tag proxyL >>>= \x -> peekSkip Proxy *>> ireturn (L1 x) 
+  gPeekSum tag proxyL -- peekSkip используется чтобы пропустить остаток данных, если размер знечения меньше максимального размера.
+    | tag < sizeL = gPeekSum tag proxyL >>>= \x -> peekSkip Proxy *>> ireturn (L1 x)
     | otherwise = gPeekSum @m @o @(n + SumArity f) @g tag (Proxy @(n + SumArity f)) >>>= \x -> peekSkip Proxy *>> ireturn (R1 x)
     where
       sizeL = fromInteger (natVal (Proxy :: Proxy (n + SumArity f)))
@@ -244,13 +252,15 @@ instance (GPokeSum m o n f, GPokeSum m o (n + SumArity f) g) => GPokeSum m o n (
 
   {-# INLINE gPokeSum #-}
   gPokeSum (L1 l) _ = gPokeSum l (Proxy :: Proxy n) *>> pokeSkip Proxy
-  gPokeSum (R1 r) _ = gPokeSum r (Proxy :: Proxy (n + SumArity f)) *>> pokeSkip Proxy 
+  gPokeSum (R1 r) _ = gPokeSum r (Proxy :: Proxy (n + SumArity f)) *>> pokeSkip Proxy
 
 instance (KnownNat n, GSerialize m (o + SizeOf Word8) f, Serialize m o Word8, SerializeConstraint m o Word8) => GPokeSum m o n (M1 ti c f) where
   type GPokeSumSizeOf (M1 ti c f) = SizeOf Word8 + GSizeOf f
-  type GPokeSumConstraint m o (M1 ti c f) = (
-    GSerializeConstraint m (o + SizeOf Word8) f,
-     o + (SizeOf Word8 + GSizeOf f) ~ (o + SizeOf Word8) + GSizeOf f)
+  type
+    GPokeSumConstraint m o (M1 ti c f) =
+      ( GSerializeConstraint m (o + SizeOf Word8) f,
+        o + (SizeOf Word8 + GSizeOf f) ~ (o + SizeOf Word8) + GSizeOf f
+      )
 
   {-# INLINE gPokeSum #-}
   gPokeSum x _ = poke (fromInteger (natVal (Proxy :: Proxy n)) :: Word8) *>> gPoke x

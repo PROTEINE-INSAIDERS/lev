@@ -19,6 +19,9 @@ import GHC.Generics (Generic)
 import Lev.Fixed
 import Data.Data (Typeable)
 import Data.Word
+import GHC.TypeLits (AppendSymbol)
+import Control.Monad.Cont
+import Control.Applicative
 
 data Test0 a = Test0 Double Int Word8 deriving (Show, Generic)
 
@@ -46,3 +49,4 @@ data SmallSum = SS1 | SS2 Test1G    deriving (Generic, Show, Typeable, Serialize
 
 -- test :: IO SmallSum
 -- test = encode SS1 >>= decode
+
